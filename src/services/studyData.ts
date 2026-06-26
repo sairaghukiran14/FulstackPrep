@@ -306,6 +306,14 @@ export const STUDY_CONTENT: Record<string, StudyContentType> = {
           <div class="qa-q">Q: When is it safe to use the array index as a key?</div>
           <div class="qa-a">A: It is safe ONLY when three conditions are met: (1) The list and items are static (never reordered, added, or deleted), (2) the items have no local state (uncontrolled inputs, toggles, etc.), and (3) the list is never filtered. Otherwise, unique IDs are required.</div>
         </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does React differentiate between mounting a new component vs updating an existing one during diffing?</div>
+          <div class="qa-a">A: React compares the element types at the same position in the tree. If they match, React updates the existing fiber node (updating props/attributes) and keeps it in the DOM. If the type changes (e.g. from &lt;div&gt; to &lt;span&gt;), React destroys the old component (unmounting it and losing its state) and mounts a brand new DOM tree. Keys override this default position-based diffing.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What is the relation between keys and the virtual DOM fiber node's identity?</div>
+          <div class="qa-a">A: A fiber node is identified uniquely by its type and key. If the key changes between renders, React considers the node to have changed identity. It deletes the old fiber (and its DOM counterpart) and instantiates a new fiber. This resets all local state, rendering inputs clean and trigger lifecycle effects afresh.</div>
+        </div>
       `,
       code: `// ❌ BAD: Index as key in dynamic list
 {items.map((item, index) => (
@@ -343,6 +351,14 @@ export const STUDY_CONTENT: Record<string, StudyContentType> = {
         <div class="qa-item">
           <div class="qa-q">Q: How does returning functional state updates resolve stale closures?</div>
           <div class="qa-a">A: Functional updates like <code>setCount(c => c + 1)</code> supply the absolute latest state directly from React's engine, eliminating dependency on the local closure variable.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does useRef avoid the stale closure problem that affects useState and useEffect?</div>
+          <div class="qa-a">A: A ref created via <code>useRef</code> returns a mutable object whose <code>.current</code> property can be changed. While the ref object reference itself is stable across renders, the closure always reads the property from that same stable reference. Reading <code>ref.current</code> retrieves the current mutable value rather than a copy from a previous render.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does the dependency array of useEffect compare values under the hood?</div>
+          <div class="qa-a">A: React compares dependency values using <code>Object.is()</code>. This means primitives (strings, numbers, booleans) are compared by value, whereas objects, arrays, and functions are compared by reference. If a new object reference is passed on every render, the effect will execute every time unless memoized.</div>
         </div>
       `,
       code: `// ❌ BAD: Stale closure in interval timer
@@ -395,6 +411,14 @@ useEffect(() => {
           <div class="qa-q">Q: How do you debug a high INP (Interaction to Next Paint) score?</div>
           <div class="qa-a">A: Use Chrome DevTools Performance panel. Look for long tasks (tasks > 50ms marked with red flags). Identify if React re-rendering, layout recalculations, or heavy synchronous JS execution is blocking the paint event after click.</div>
         </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does LCP (Largest Contentful Paint) relate to Fetch Priority and render-blocking resources?</div>
+          <div class="qa-a">A: Slow LCP is often caused by stylesheets or script files blocking the HTML parser. Preloading critical hero images using <code>&lt;link rel="preload" fetchpriority="high"&gt;</code> instructs the browser to retrieve the LCP element immediately, bypassing lower-priority scripts.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What is the main structural difference between First Input Delay (FID) and Interaction to Next Paint (INP)?</div>
+          <div class="qa-a">A: FID only measures the delay of the *first* interaction (click/key press) and stops measuring after event processing starts. INP measures the entire duration (delay + event handler execution time + rendering time) of *all* interactions across the user's visit, taking the worst-case scenario. This makes INP a much more comprehensive metric of visual response.</div>
+        </div>
       `,
       code: `// 🚀 Optimizing INP by yielding execution to the main thread
 function handleHeavyTelemetryUpdate(data) {
@@ -441,6 +465,14 @@ function handleHeavyTelemetryUpdate(data) {
           <div class="qa-q">Q: What happens under the hood when a ref value is modified?</div>
           <div class="qa-a">A: Reading <code>ref.value</code> triggers a dependency track (<code>track()</code>), adding the active component render function to the ref's subscriber Set. Mutating <code>ref.value = newValue</code> triggers a dependency trigger (<code>trigger()</code>), scheduling all subscriber components for update queue execution.</div>
         </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What is the performance impact of nesting standard refs inside reactive objects?</div>
+          <div class="qa-a">A: Vue automatically unwraps nested refs inside reactive objects. When you access <code>reactiveObj.someRef</code>, you get the value directly without writing <code>.value</code>. However, this unwrapping does not occur when refs are nested inside reactive arrays or collections, which requires manual unwrapping.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does Vue's compiler optimize updates under script setup compared to React's runtime diffing?</div>
+          <div class="qa-a">A: Vue's compiler analyzes templates statically (during build time) and tags dynamic sections with "Patch Flags" (e.g. text node changes, class bindings). During re-renders, Vue completely bypasses comparing static DOM nodes and jumps directly to updating the dynamic sections flagged in the Virtual DOM, making it highly efficient. React performs full runtime recursive diffing of elements at render boundaries unless manually optimized with <code>React.memo</code>.</div>
+        </div>
       `,
       code: `// ❌ BAD: Destructuring reactive breaks reactivity
 const state = reactive({ count: 0 });
@@ -483,6 +515,14 @@ const { host } = toRefs(config); // 'host' is now a ref pointing to config.host`
         <div class="qa-item">
           <div class="qa-q">Q: Why must a BESS dashboard show reactive power (MVAR) in addition to active power (MW)?</div>
           <div class="qa-a">A: Active power (MW) is the actual energy doing work. Reactive power (MVAR) is required to sustain magnetic fields in motors/generators and regulate grid voltage. Batteries can inject reactive power to support local grid voltage stability during voltage sags.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What is State of Charge (SOC) drift, and how do battery management systems recalibrate it?</div>
+          <div class="qa-a">A: SOC drift occurs because tracking is done via Coulomb Counting (integrating current over time), which accumulates small measurement errors over cycles. BMS software recalibrates SOC when the battery reaches a fully charged or fully discharged state, mapping open circuit voltage (OCV) directly to cell capacity templates.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does active power control (frequency response) differ from peak shaving in utility-scale BESS?</div>
+          <div class="qa-a">A: Peak shaving is scheduled or threshold-based to reduce peak power draw over hours. Frequency response is an automated, millisecond-level telemetry cycle: BESS controllers monitor grid frequency (e.g. 60Hz), and instantly inject active power if frequency drops (grid is underloaded) or absorb power if it rises, stabilizing grid operations.</div>
         </div>
       `,
       code: `// Simple simulation of BESS state transitions based on grid load
@@ -562,6 +602,14 @@ function calculateBatteryAction(gridLoadkW, batteryState) {
           <div class="qa-q">Q: How does the server push an event in SSE format?</div>
           <div class="qa-a">A: The server writes headers: <code>'Content-Type': 'text/event-stream'</code> and <code>'Connection': 'keep-alive'</code>. It then writes text formatted as <code>data: { "val": 42 }\n\n</code> and flushes the response buffer.</div>
         </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How do you handle authentication in SSE streams, given that EventSource doesn't support custom headers natively in older browsers?</div>
+          <div class="qa-a">A: Native browser <code>EventSource</code> API does not allow passing custom request headers (like Bearer tokens). To authenticate, you can pass the token as a query parameter (e.g. <code>?token=jwt_value</code>) which is verified on the backend, or use cookie-based authentication, since cookies are automatically sent with persistent HTTP requests.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does HTTP/2 multiplexing resolve the connection limits and protocol overhead of SSE?</div>
+          <div class="qa-a">A: HTTP/2 allows multiplexing multiple request/response streams over a single TCP connection. This bypasses the 6-connection limit per domain in browsers, enabling dozens of SSE connections simultaneously. Furthermore, HTTP/2 HPACK header compression reduces metadata overhead on persistent streams.</div>
+        </div>
       `,
       code: `// Express Backend: Stream telemetry data
 app.get('/api/telemetry-stream', (req, res) => {
@@ -611,6 +659,14 @@ app.get('/api/telemetry-stream', (req, res) => {
           <div class="qa-q">Q: How do index writes impact database write performance?</div>
           <div class="qa-a">A: Indexes speed up SELECT queries but slow down INSERT, UPDATE, and DELETE operations. This is because the database must update the B-Tree structure and re-balance nodes on every write. Keep indexes focused and avoid over-indexing columns that are rarely queried.</div>
         </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What is a composite index and why does column order matter in it?</div>
+          <div class="qa-a">A: A composite index covers multiple columns (e.g. <code>(device_id, timestamp)</code>). The order of columns matters because B-Trees are sorted lexicographically starting from the leftmost column. A query filtering by <code>timestamp</code> alone cannot use this index, whereas a query filtering by <code>device_id</code> or both columns can. Always place columns queried with equality filters first, and range filters last.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How do you identify N+1 query patterns in server logs without direct APM tools?</div>
+          <div class="qa-a">A: Look for a repeating sequence of identical or very similar SQL queries executing within milliseconds of each other (e.g. dozens of <code>SELECT * FROM alarms WHERE asset_id = $1</code>). Seeing a single query for a parent record immediately followed by a cascade of child-table queries is a classic N+1 indicator.</div>
+        </div>
       `,
       code: `// ❌ BAD: N+1 query pattern using an ORM
 const assets = await db.query('SELECT * FROM assets');
@@ -659,6 +715,14 @@ const assetsWithAlarms = await db.query(\`
         <div class="qa-item">
           <div class="qa-q">Q: How does backpressure impact real-time UI dashboards?</div>
           <div class="qa-a">A: Backpressure occurs when the server pushes messages faster than the client browser can render them, causing the JS event loop to lag and freezing the tab. Solved by client-side data throttling (buffering updates and rendering at 60fps max) and server-side downsampling (aggregating sub-second data to average intervals).</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: When would you choose an event broker like Kafka over a message queue like RabbitMQ?</div>
+          <div class="qa-a">A: RabbitMQ is a smart-broker/dumb-consumer model designed for fast routing, delivery confirmations, and task distribution (messages are deleted immediately after consumption). Kafka is an append-only distributed log (dumb-broker/smart-consumer) designed for high-throughput streaming. In Kafka, messages persist, allowing multiple independent consumer groups to replay history or analyze telemetry at different rates.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How do you handle schema evolution for real-time telemetry messages sent over WebSockets or SSE?</div>
+          <div class="qa-a">A: Use a binary, contract-driven serialization format like Protocol Buffers (Protobuf) or Apache Avro with a Schema Registry. This ensures backward and forward compatibility, significantly reduces network payload size (since keys are hashed to numbers instead of sending long JSON strings), and enforces strict types.</div>
         </div>
       `,
       code: `// Client-side requestAnimationFrame rendering throttle (resolves UI lag)
@@ -721,6 +785,14 @@ function renderTelemetryBatch() {
           <div class="qa-q">Q: What did you learn from this project?</div>
           <div class="qa-a">A: I learned the importance of profiling code before writing optimizations. Using Chrome DevTools and SQL EXPLAIN analyze helped me pinpoint the actual bottlenecks (e.g. DOM node counts and nested loop queries) rather than guessing.</div>
         </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How did you measure the 90% latency reduction, and what benchmarks did you share with stakeholders?</div>
+          <div class="qa-a">A: I set up automated lighthouse reports on build pipelines to track LCP/INP and used database EXPLAIN plan timings before and after index implementation. We shared dashboard load time reductions (from 3.2s to 280ms) and CPU consumption charts showing a 30% load reduction with executive stakeholders.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How did you coordinate the deployment of this database change to avoid downtime for active users?</div>
+          <div class="qa-a">A: We applied the SQL index migration concurrently using <code>CREATE INDEX CONCURRENTLY</code> in PostgreSQL, which avoids locking the table against writes. The backend service deployment was done via ECS blue-green rolling updates, ensuring that traffic shifted to code version 2 only when container health checks succeeded.</div>
+        </div>
       `,
       code: `// Conceptual structure of the list virtualization logic
 function VirtualList({ items, itemHeight, viewportHeight }) {
@@ -751,6 +823,294 @@ function VirtualList({ items, itemHeight, viewportHeight }) {
       </div>
     </div>
   );
+}`
+    }
+  },
+  'rec-memo': {
+    category: 'React & Frontend',
+    title: 'Memoization',
+    desc: 'useMemo vs useCallback vs React.memo, when to use them, and when they backfire or add overhead.',
+    tabs: {
+      deepdive: `
+        <h4>The Mental Model</h4>
+        <p>Memoization caches the result of a function execution or the reference of a value/callback. In React, this is crucial for preventing unnecessary re-renders of child components that rely on referential identity (via shallow comparison).</p>
+        <ul>
+          <li><code>useMemo</code>: Caches a calculated value. Only recalculates when dependencies change.</li>
+          <li><code>useCallback</code>: Caches a function definition. Only updates the function reference when dependencies change.</li>
+          <li><code>React.memo</code>: A higher-order component that skips rendering a component if its props haven't changed.</li>
+        </ul>
+        <h4>Case Study: The Slow Chart Tooltip</h4>
+        <p><strong>Scenario:</strong> A SCADA dashboard renders a real-time battery status chart. Moving the mouse over the chart triggers state updates for the tooltip coordinates, causing the entire chart canvas to redraw, leading to visible lag.</p>
+        <p><strong>Remediation:</strong> Wrapped the heavy chart drawing calculations in <code>useMemo</code> and wrapped the chart component itself in <code>React.memo</code>. Used <code>useCallback</code> for event handlers passed to the chart.</p>
+        <p><strong>Result:</strong> Hover updates execute at 60fps because chart rendering is skipped unless telemetry data changes.</p>
+      `,
+      qa: `
+        <div class="qa-item">
+          <div class="qa-q">Q: When does adding useMemo or useCallback actually hurt performance?</div>
+          <div class="qa-a">A: Every hook has a cost: React must allocate memory for dependency arrays and perform shallow comparison checks on every render. If you use memoization for simple computations (like basic math or short array filtering), the overhead of the dependency checks and cache storage exceeds the cost of re-running the logic.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does React.memo determine if a component should re-render?</div>
+          <div class="qa-a">A: It performs a shallow comparison of the component's props. If any prop's reference or value changes, the component re-renders. You can pass a custom comparison function as a second argument (e.g. <code>(prevProps, nextProps) =&gt; boolean</code>) to customize this behavior.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What is the "identity reference" problem with inline objects and arrays in React?</div>
+          <div class="qa-a">A: If you pass an inline object (e.g. <code>style={{ margin: 0 }}</code>) or function (e.g. <code>onClick={() =&gt; doSomething()}</code>) as a prop, a new reference is created on every render. This breaks <code>React.memo</code> since shallow comparison of that prop will always fail, rendering the memoization useless.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What is the React Compiler (React Forget) and how will it change this?</div>
+          <div class="qa-a">A: The React Compiler is a build-time tool that automatically inserts memoization at the compile level, caching values and callbacks without requiring developers to write <code>useMemo</code> or <code>useCallback</code>. This removes the cognitive load of manual optimization.</div>
+        </div>
+      `,
+      code: `// 🚀 Correct usage of memoization to prevent child re-renders
+import React, { useState, useCallback, useMemo } from 'react';
+
+const HeavyChild = React.memo(({ onClick, processedList }) => {
+  console.log("Child rendered!");
+  return <div onClick={onClick}>Items count: {processedList.length}</div>;
+});
+
+export function ParentComponent({ rawItems }) {
+  const [theme, setTheme] = useState('dark');
+  
+  // Cache the filtered list reference
+  const processedList = useMemo(() => {
+    return rawItems.filter(it => it.active);
+  }, [rawItems]);
+
+  // Cache the callback reference
+  const handleClick = useCallback(() => {
+    console.log("Clicked child");
+  }, []);
+
+  return (
+    <div>
+      <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>Toggle Theme</button>
+      <HeavyChild onClick={handleClick} processedList={processedList} />
+    </div>
+  );
+}`
+    }
+  },
+  'st-tsq': {
+    category: 'React & Frontend',
+    title: 'TanStack Query (React Query)',
+    desc: 'Cache keys, stale-while-revalidate lifecycle, invalidation, and optimistic updates.',
+    tabs: {
+      deepdive: `
+        <h4>The Mental Model</h4>
+        <p>TanStack Query manages <strong>asynchronous server cache</strong>. It treats the server as the source of truth, and maintains a local cache of endpoint responses indexed by unique <strong>Query Keys</strong>. Updates leverage a <em>stale-while-revalidate</em> pattern: the client instantly displays cached (stale) data while fetching fresh data in the background.</p>
+        <h4>Case Study: Stale-While-Revalidate Grid</h4>
+        <p><strong>Problem:</strong> A grid dashboard displays energy meter readings. Using standard <code>useEffect</code> fetches showed a blank loading spinner every time the tab was focused, annoying users.</p>
+        <p><strong>Action:</strong> Migrated to TanStack Query. Configured a <code>staleTime</code> of 5 seconds. When the user navigates away and returns, the cached reading is shown instantly, while a silent background refetch updates any differences.</p>
+        <p><strong>Outcome:</strong> Replaced blank loading states with instantaneous page transitions, enhancing UI feel.</p>
+      `,
+      qa: `
+        <div class="qa-item">
+          <div class="qa-q">Q: What is the difference between staleTime and gcTime (formerly cacheTime)?</div>
+          <div class="qa-a">A: <code>staleTime</code> is the duration before data is considered "old" and needs refetching (default is 0). <code>gcTime</code> is the time inactive query data remains cached in memory before garbage collection sweeps it (default is 5 minutes). Even if data is stale, it is served from the cache while a background fetch runs, as long as it hasn't been garbage collected.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How do Query Keys function in cache resolution?</div>
+          <div class="qa-a">A: Query Keys act as unique hash keys. They are treated as serialized arrays. For instance, <code>['meters', meterId]</code> ensures that changing <code>meterId</code> automatically invalidates the old cache key and triggers a fetch for the new key, keeping queries isolated.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does an Optimistic Update workflow operate during mutations?</div>
+          <div class="qa-a">A: Inside <code>onMutate</code>, cancel outgoing queries, capture the current cache value, manually inject the predicted successful result into the query cache, and return a rollback function. If the request succeeds, invalidate the query to sync with server. If it fails, restore the captured state inside <code>onError</code>.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does prefetching improve UX?</div>
+          <div class="qa-a">A: Prefetching loads queries into the cache *before* they are rendered. For example, prefetching Page 2 when the user hovers over the "Next Page" button makes the transition instantaneous when clicked.</div>
+        </div>
+      `,
+      code: `// Optimistic update implementation example
+const queryClient = useQueryClient();
+
+const mutation = useMutation({
+  mutationFn: updateMeterStatus,
+  onMutate: async (newStatus) => {
+    // Cancel outgoing fetches to prevent overwrites
+    await queryClient.cancelQueries({ queryKey: ['meters'] });
+    
+    // Capture snapshot of previous state
+    const previous = queryClient.getQueryData(['meters']);
+    
+    // Optimistically update query cache
+    queryClient.setQueryData(['meters'], (old) => ({ ...old, status: newStatus }));
+    
+    // Return rollback handler
+    return { previous };
+  },
+  onError: (err, newStatus, context) => {
+    // Rollback to previous state
+    queryClient.setQueryData(['meters'], context.previous);
+  },
+  onSettled: () => {
+    // Invalidate and refetch
+    queryClient.invalidateQueries({ queryKey: ['meters'] });
+  }
+});`
+    }
+  },
+  'be-rate': {
+    category: 'Backend & APIs',
+    title: 'Rate Limiting',
+    desc: 'Protecting API servers against overloading: algorithms, header standards, and multi-node coordination.',
+    tabs: {
+      deepdive: `
+        <h4>The Mental Model</h4>
+        <p>Rate limiting restricts the number of requests a client can make in a given timeframe. It prevents resource starvation, handles traffic surges, and protects against Denial-of-Service (DoS) attacks.</p>
+        <ul>
+          <li><strong>Token Bucket</strong>: Tokens are added to a bucket at a fixed rate. Requests consume tokens. Handles bursts easily.</li>
+          <li><strong>Leaky Bucket</strong>: Requests queue up and leak out at a constant, steady rate. Good for smoothing out traffic spikes.</li>
+          <li><strong>Sliding Window Log</strong>: Records timestamps of every request. Highly accurate but memory intensive.</li>
+        </ul>
+        <h4>Case Study: Webhook Gateway Crash</h4>
+        <p><strong>Scenario:</strong> A smart meter company's webhook receiver crashed because 50,000 meters reported status simultaneously at midnight, exhausting database connections.</p>
+        <p><strong>Remediation:</strong> Added an API gateway rate limiter using a Token Bucket algorithm, capping requests to 100/sec per IP, and queued excess requests in BullMQ.</p>
+        <p><strong>Result:</strong> Webhook gateway stabilized; resource usage remained linear during peak reports.</p>
+      `,
+      qa: `
+        <div class="qa-item">
+          <div class="qa-q">Q: What is the main design difference between Token Bucket and Sliding Window algorithms?</div>
+          <div class="qa-a">A: Token Bucket allows momentary bursts of traffic as long as the bucket has tokens, whereas Sliding Window strictly caps request rates at a rolling window boundary, smoothing traffic but dropping bursty valid requests.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How do you scale rate limiting across multiple backend instances?</div>
+          <div class="qa-a">A: Local memory rate limiting fails in a clustered environment because a user's requests hit different servers. Scale it by storing request counts in a central, fast cache like <strong>Redis</strong> using atomic commands (like <code>INCR</code> and <code>EXPIRE</code>) or running Lua scripts to prevent race conditions.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What HTTP headers should a rate-limited response return?</div>
+          <div class="qa-a">A: A rate-limited request should return a <code>429 Too Many Requests</code> status code along with standard headers: <code>X-RateLimit-Limit</code> (capacity), <code>X-RateLimit-Remaining</code> (left), and <code>Retry-After</code> (seconds to wait before retry).</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How do you prevent IP spoofing in rate limiters behind a load balancer?</div>
+          <div class="qa-a">A: Read the client IP from the <code>X-Forwarded-For</code> header instead of the raw connection socket. You must configure the server to trust only the proxy/load balancer's IP to prevent clients from spoofing this header.</div>
+        </div>
+      `,
+      code: `// Redis Lua script for atomic sliding window rate limiting
+const rateLimiterScript = \`
+  const key = KEYS[1]
+  const now = tonumber(ARGV[1])
+  const window = tonumber(ARGV[2])
+  const limit = tonumber(ARGV[3])
+  
+  redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
+  const count = redis.call('ZCARD', key)
+  
+  if count < limit then
+    redis.call('ZADD', key, now, now)
+    redis.call('EXPIRE', key, window)
+    return 1
+  else
+    return 0
+  end
+\`;`
+    }
+  },
+  'dp-docker': {
+    category: 'Deployment & DevOps',
+    title: 'Multi-stage Docker',
+    desc: 'Optimizing container builds: multi-stage layers, reducing footprint size, and security improvements.',
+    tabs: {
+      deepdive: `
+        <h4>The DevOps Mental Model</h4>
+        <p>A production container should only contain runtime binaries and dependencies. Including compile-time tools (compilers, npm packages, typescript tools) increases the container's attack surface and results in bloated images that slow down scaling.</p>
+        <p><strong>Multi-stage builds</strong> solve this by using separate temporary containers (stages) to install and build assets, and copying only the compiled artifacts (e.g. dist folders, production node_modules) to the final base image.</p>
+        <h4>Case Study: Reducing a Node App Footprint</h4>
+        <p><strong>Scenario:</strong> A microservice image measured 1.4GB, causing container startup times to take over 2 minutes in ECS.</p>
+        <p><strong>Action:</strong> Rewrote the Dockerfile using a multi-stage process. Stage 1 installed devDependencies and ran <code>npm run build</code>. Stage 2 copied only <code>dist/</code> and installed production-only packages using <code>npm ci --only=production</code> onto a minimal alpine base image.</p>
+        <p><strong>Result:</strong> Image size fell to 135MB (a 90% reduction), and ECS deployment spin-up latency dropped to 12 seconds.</p>
+      `,
+      qa: `
+        <div class="qa-item">
+          <div class="qa-q">Q: Why are multi-stage Docker builds useful?</div>
+          <div class="qa-a">A: They allow developer tools (compilers, linters, TS configs) to compile code in a build stage, and then package only the output binaries or minified assets in the runner container. This separates build requirements from runtime environments.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How does Docker's cache layer system work, and how does it influence Dockerfile command ordering?</div>
+          <div class="qa-a">A: Docker caches each instruction line. If a layer changes, all subsequent caches are invalidated. Order commands from least-frequently changed to most-frequently changed. Copy <code>package.json</code> and run <code>npm install</code> *before* copying the remaining source code so code changes don't trigger package reinstall loops.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What is the difference between alpine and scratch/distroless base images?</div>
+          <div class="qa-a">A: Alpine is a minimal Linux distribution containing a busybox shell and package manager. Scratch/distroless images contain *only* the application binary and its direct dependencies, stripped of shell scripts and standard system tools, maximizing security and minimizing size.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How do you pass build-time arguments (ARG) vs runtime environment variables (ENV) securely?</div>
+          <div class="qa-a">A: Use <code>ARG</code> for values needed only during the build stage (e.g. compiler version). Use <code>ENV</code> for variables needed at runtime. Never store secrets (like DB passwords) in <code>ENV</code> layers; inject them at runtime using key managers (AWS Secrets Manager) or container environment injections.</div>
+        </div>
+      `,
+      code: `# Multi-stage Dockerfile configuration example
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:18-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm ci --only=production
+COPY --from=build /app/dist ./dist
+EXPOSE 3000
+CMD ["node", "dist/index.js"]`
+    }
+  },
+  'dsa-sliding': {
+    category: 'DSA Algorithms',
+    title: 'Sliding Window',
+    desc: 'Linear time optimizations: fixed vs variable sized window boundaries and substring evaluations.',
+    tabs: {
+      deepdive: `
+        <h4>The Algorithm Mental Model</h4>
+        <p>The Sliding Window pattern is used to perform operations on a contiguous sequence of elements (like subarrays or substrings) in linear time O(N), replacing quadratic O(N²) nested loops.</p>
+        <ul>
+          <li><strong>Fixed Size Window</strong>: The window size <code>K</code> is constant. Shift the window from left to right by adding the new element on the right and removing the old element on the left.</li>
+          <li><strong>Variable Size Window</strong>: Grow the window on the right side. When a constraint is violated, shrink it from the left side until the constraint is satisfied again.</li>
+        </ul>
+        <h4>Case Study: Real-time Telemetry Peak Analysis</h4>
+        <p><strong>Goal:</strong> Find the maximum average energy spikes over any continuous 5-minute interval in a list of hourly grid records.</p>
+        <p><strong>Approach:</strong> Instead of recalculating averages from scratch at each index (O(N * K)), maintain a sliding window sum of size <code>K</code>. Update the sum by subtracting the outgoing value and adding the incoming value in O(1) step. Time complexity drops to O(N).</p>
+      `,
+      qa: `
+        <div class="qa-item">
+          <div class="qa-q">Q: How do you identify a sliding window problem?</div>
+          <div class="qa-a">A: Look for keywords like "longest/shortest substring", "contiguous subarray", or continuous windows under boundaries. The problem will usually ask to optimize range results across sequential lists.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What is the time complexity of a variable-size sliding window, and why is it O(N) even with a nested loop?</div>
+          <div class="qa-a">A: The time complexity is O(N) because the left and right pointers only move forward. Each element is visited at most twice: once when added on the right, and once when removed on the left. The inner loop runs at most N times total across the entire algorithm.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: How do you keep track of characters or frequencies inside the active window?</div>
+          <div class="qa-a">A: Use a Hash Map or a fixed-size frequency array (e.g. size 128 or 256 for ASCII). Track the count of each character. Compare the map size or match counter to constraints.</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-q">Q: What is the difference between sliding window and two-pointer approach?</div>
+          <div class="qa-a">A: Two pointers can start at opposite ends of the structure and move inward (like binary search or container water problems). Sliding window pointers move in the same direction, bounding a contiguous subset.</div>
+        </div>
+      `,
+      code: `// Longest Substring Without Repeating Characters (O(N) time, O(min(A, M)) space)
+function lengthOfLongestSubstring(s) {
+  let maxLength = 0;
+  let left = 0;
+  const charMap = new Map();
+
+  for (let right = 0; right < s.length; right++) {
+    const char = s[right];
+    
+    // If character exists in current window, move left boundary
+    if (charMap.has(char) && charMap.get(char) >= left) {
+      left = charMap.get(char) + 1;
+    }
+    
+    charMap.set(char, right);
+    maxLength = Math.max(maxLength, right - left + 1);
+  }
+  
+  return maxLength;
 }`
     }
   }
@@ -801,6 +1161,14 @@ export function getFallbackContent(id: string, title: string, note: string): Stu
       {
         q: `Q: How does React handle updates related to ${title}?`,
         a: `A: React batches state updates inside event handlers and lifecycle triggers asynchronously, creating a new fiber tree and applying minimal, batched DOM edits during the commit phase.`
+      },
+      {
+        q: `Q: What is the benefit of a Custom Hook for managing state related to ${title}?`,
+        a: `A: Custom hooks enable Single Responsibility and Dependency Inversion. They extract stateful logic (fetching, local storage syncing, cache calculations) out of UI components, allowing the logic to be tested and reused independently, and easily swapped without modifying rendering layout markup.`
+      },
+      {
+        q: `Q: How does the virtual DOM reconciliation differentiate list items on state changes related to ${title}?`,
+        a: `A: React utilizes unique keys to maintain stability during reconciliation. When rendering dynamic lists, keys map the element representation to its respective DOM node, preventing visual glitches such as input state mismatch or scroll reset.`
       }
     ];
     codeSnippet = `// React practice snippet for: ${title}
@@ -869,6 +1237,14 @@ export function ModernComponent({ dataId }) {
       {
         q: `Q: What is the best practice for using ${title} inside composables?`,
         a: `A: Return refs inside an plain object rather than destructuring a reactive object directly, which would break Vue's reactive connection. Use <code>toRefs()</code> if destructuring is necessary.`
+      },
+      {
+        q: `Q: What is the purpose of computed properties compared to watchEffect for ${title}?`,
+        a: `A: <code>computed</code> is for deriving synchronous state that is automatically cached and only recalculated when its reactive dependencies change. <code>watchEffect</code> is for executing side effects (like API requests, DOM manipulation, or logging) in response to dependency changes.`
+      },
+      {
+        q: `Q: How does the Provide / Inject API help with state routing for ${title}?`,
+        a: `A: Provide/Inject resolves props drilling by allowing parent components to declare shared state, which can be injected by any nested child component, bypassing intermediate layout containers.`
       }
     ];
     codeSnippet = `<!-- Vue 3 Single File Component style for: ${title} -->
@@ -938,6 +1314,14 @@ onMounted(() => {
       {
         q: `Q: How do kW and kWh differ conceptually when displaying telemetry values on a dashboard?`,
         a: `A: kW (kilowatt) is a measure of instantaneous real power capacity (flow rate), while kWh (kilowatt-hour) is the accumulation of energy generated or consumed over time (total volume). Dashboards must show kW for instantaneous status, and integration curves (kWh) for production reports.`
+      },
+      {
+        q: `Q: How does network downsampling optimize live SCADA telemetry updates for ${title}?`,
+        a: `A: Downsampling aggregates granular sub-second IoT records into averaged windows (e.g. 5-second or 1-minute blocks) at the backend or edge level, drastically reducing the data payload size and preserving main-thread UI performance in client browsers.`
+      },
+      {
+        q: `Q: What is active vs reactive power and why should the EMS dashboard represent both for ${title}?`,
+        a: `A: Active power (kW) performs actual work in electrical circuits, while reactive power (kVAR) maintains electromagnetic fields required by industrial inductive loads. Tracking both is critical for monitoring power quality, power factor efficiency, and load stability.`
       }
     ];
     codeSnippet = `// Fast Telemetry Throttler & Canvas Draw example for: ${title}
@@ -1007,6 +1391,14 @@ class TelemetryVisualizer {
       {
         q: `Q: How do you address performance bottlenecks related to ${title}?`,
         a: `A: Add appropriate database indices on foreign keys and frequently queried fields, use connection pooling, cache static or semi-static responses in Redis, and run explain analyze on SQL queries to identify slow scans.`
+      },
+      {
+        q: `Q: What is a connection pool and how does it prevent DB overload for ${title}?`,
+        a: `A: A connection pool maintains a cache of active database connections that are shared among incoming API requests. This eliminates the CPU and network overhead of establishing a new TCP/TLS handshake with the database for every single query.`
+      },
+      {
+        q: `Q: Why is JSON payload validation critical for backend inputs related to ${title}?`,
+        a: `A: Validating incoming JSON schemas (using tools like Zod or Joi) prevents malformed payloads, SQL/NoSQL injection, and prototype pollution attacks. It ensures data matches strict criteria before processing, preserving database integrity.`
       }
     ];
     codeSnippet = `// Node.js Express Controller Example for: ${title}
@@ -1067,6 +1459,14 @@ module.exports = router;`;
       {
         q: `Q: Why are multi-stage Docker builds useful?`,
         a: `A: They allow you to build files (like running npm run build) using heavy devDependencies, and then copy only the static assets or runtime files to a clean, minimal base image (like alpine) in the final stage, eliminating build tools and reducing the attack surface.`
+      },
+      {
+        q: `Q: How does blue-green deployment work for zero-downtime releases of ${title}?`,
+        a: `A: Blue-green deployment runs two identical production environments (Blue is active, Green is standby/staging). During deployment, code is pushed to Green. Once automated health checks pass, load balancers dynamically swap client traffic to Green, making it active with zero downtime.`
+      },
+      {
+        q: `Q: What is a secret manager and why should it handle env configuration for ${title}?`,
+        a: `A: A secret manager (like AWS Secrets Manager or HashiCorp Vault) securely stores passwords, API keys, and certificates. Rather than checking secrets into Git or baking them into Docker images, applications fetch them dynamically at container startup, enhancing security.`
       }
     ];
     codeSnippet = `# Multi-stage Dockerfile example for: ${title}
@@ -1117,6 +1517,14 @@ CMD ["node", "dist/index.js"]`;
       {
         q: `Q: What is the benefit of a Heap (Priority Queue)?`,
         a: `A: A Heap allows retrieving the minimum or maximum element in O(1) time and inserting/extracting elements in O(log K) time. It is highly efficient for "top K elements" problems or continuous stream merging.`
+      },
+      {
+        q: `Q: What is the difference between a hash map and a set when optimizing lookups for ${title}?`,
+        a: `A: A set is used to track the presence/uniqueness of keys in O(1) time (useful for tracking visited elements). A hash map maps keys to specific values (useful for storing frequencies or indices) in O(1) time.`
+      },
+      {
+        q: `Q: How does a stack differ from a queue and when is a stack optimal for ${title}?`,
+        a: `A: A stack is Last-In-First-Out (LIFO), whereas a queue is First-In-First-Out (FIFO). A stack is optimal for backtracking, parsing balanced symbols (parentheses), or depth-first search (DFS) traversals.`
       }
     ];
     codeSnippet = `// DSA implementation snippet for: ${title}
@@ -1167,6 +1575,14 @@ function binarySearchRotated(nums, target) {
       {
         q: `Q: What is a typical bottleneck in system design for ${title}?`,
         a: `A: Network database I/O and state synchronization. Mitigate by choosing appropriate caching layers, using event-driven communication (RabbitMQ/Kafka), and scaling database reads via read-replicas.`
+      },
+      {
+        q: `Q: How do you handle conflict resolution with a product manager regarding features for ${title}?`,
+        a: `A: Focus on data and engineering trade-offs. Present alternatives with their respective costs, timelines, and technical debts. Keep communication objective, aligning on business goals and user impact rather than personal opinions.`
+      },
+      {
+        q: `Q: How does database replication improve availability for system designs targeting ${title}?`,
+        a: `A: Replication copies data across multiple database nodes. By routing write operations to a primary node and read operations to secondary replica nodes, you balance the query load and ensure system availability even if the primary node encounters a hardware outage.`
       }
     ];
     codeSnippet = `// System Design layout representation for: ${title}
